@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script src="scripts/main.js"></script>
+<link rel="stylesheet" type="text/css" href="css/main.css">
+</head>
+<body onkeydown="tutkiKey(event)">
+<form id="tiedot">
+<table>
+	<thead>
+		<tr>
+			<th colspan="6" class="oikealle"><a href="listaakirjat.html" id="takaisin">Takaisin listaukseen</a></th>
+		</tr>
+		<tr>
+			<th>Kirjan nimi</th>
+			<th>Kirjailijan etunimi</th>
+			<th>sukunimi</th>
+			<th>Genre</th>
+			<th colspan=2>Sidosasu</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td><input type="text" name="kirja_nimi" id="kirja_nimi"></td>
+			<td><input type="text" name="kirjailija_etunimi" id="kirjailija_etunimi"></td>
+			<td><input type="text" name="kirjailija_sukunimi" id="kirjailija_sukunimi"></td>
+			<td><select name="genre" id="genre">
+				<option value="fantasia">Fantasia</option>
+				<option value="scifi">Sci-Fi</option>
+				<option value="klassikot">Klassikko</option>
+				<option value="tietokirja">Tietokirja</option>
+				<option value="romantiikka">Romantiikka</option>
+				<option value="jännitys">Jännitys</option>
+				<option value="kauhu">Kauhu</option>
+				<option value="huumori">Huumori</option>
+			</select></td>
+			<td><select name="sidosasu" id="sidosasu">
+				<option value="sidottu">Sidottu</option>
+				<option value="nidottu">Nidottu</option>
+				<option value="pokkari">Pokkari</option>
+				<option value="äänikirja">Äänikirja</option>
+				<option value="e-kirja">E-kirja</option>
+			</select></td>
+			<td><input type="button" name="nappi" id="tallenna" value="Lisää" onclick="lisaaTiedot()"></td>
+		</tr>
+	</tbody>
+</table>
+</form>
+<span id="ilmo"></span>
+<script>
+
+function tutkiKey(event){
+	if(event.keyCode==13){//Enter
+		lisaaTiedot();
+	}		
+}
+document.getElementById("kirja_nimi").focus();//viedään kursori kirjan nimi-kenttään sivun latauksen yhteydessä
+
+//funktio tietojen lisäämistä varten. Kutsutaan backin POST-metodia ja välitetään kutsun mukana uudet tiedot json-stringinä.
+//POST /asiakkaat/
+function lisaaTiedot(){	
+	var kirja_nimi = document.getElementById("kirja_nimi").value;
+	var kirjailija_etunimi = document.getElementById("kirjailija_etunimi").value;
+	var kirjailija_sukunimi = document.getElementById("kirjailija_sukunimi").value;
+	var genre = document.getElementById("genre").value;
+	var sidosasu = document.getElementById("sidosasu").value;	
+	if(kirja_nimi.length<2||kirjailija_etunimi.length<2||kirjailija_sukunimi.length<2||genre.length<2||sidosasu.length<2){
+		document.getElementById("ilmo").innerHTML = "Antamasi arvot eivät kelpaa!"
+		return;
+	}
+	var formJsonStr=formDataToJSON(document.getElementById("tiedot")); //muutetaan lomakkeen tiedot json-stringiksi
+	//Lähetään uudet tiedot backendiin
+	fetch("Kirjat",{
+	      method: 'POST',
+	      body:formJsonStr
+	    })
+	.then( function (response) {
+		return response.json()
+	})
+	.then( function (responseJson) {
+		var vastaus = responseJson.response;		
+		if(vastaus==0){
+			document.getElementById("ilmo").innerHTML= "Kirjan lisääminen epäonnistui";
+        }else if(vastaus==1){	        	
+        	document.getElementById("ilmo").innerHTML= "Kirjan lisääminen onnistui";			      	
+		}	
+	});		
+}
+</script>
+</body>
+</html>

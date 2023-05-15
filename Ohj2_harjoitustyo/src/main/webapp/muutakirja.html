@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script src="scripts/main.js"></script>
+<link rel="stylesheet" type="text/css" href="css/main.css">
+<title>Kirjan tietojen muutos</title>
+</head>
+<body onkeydown="tutkiKey(event)">
+<form id="tiedot">
+	<table class="table">
+		<thead>
+			<tr>
+				<th colspan="6" class="oikealle"><a href="listaakirjat.html" id="takaisin">Takaisin listaukseen</a></th>
+			</tr>
+			<tr>
+				<th>Kirjan nimi</th>
+				<th>Kirjailijan etunimi</th>
+				<th>sukunimi</th>
+				<th>Genre</th>
+				<th>Sidosasu</th>			
+				<th>Hallinta</th>
+			</tr>
+		</thead>
+			<tr>
+				<td><input type="text" name="kirja_nimi" id="kirja_nimi"></td>
+				<td><input type="text" name="kirjailija_etunimi" id="kirjailija_etunimi"></td>
+				<td><input type="text" name="kirjailija_sukunimi" id="kirjailija_sukunimi"></td>
+				<td><select name="genre" id="genre">
+					<option value="fantasia">Fantasia</option>
+					<option value="scifi">Sci-Fi</option>
+					<option value="klassikot">Klassikko</option>
+					<option value="tietokirja">Tietokirja</option>
+					<option value="romantiikka">Romantiikka</option>
+					<option value="jännitys">Jännitys</option>
+					<option value="kauhu">Kauhu</option>
+					<option value="huumori">Huumori</option>
+				</select></td>
+				<td><select name="sidosasu" id="sidosasu">
+					<option value="sidottu">Sidottu</option>
+					<option value="nidottu">Nidottu</option>
+					<option value="pokkari">Pokkari</option>
+					<option value="äänikirja">Äänikirja</option>
+					<option value="e-kirja">E-kirja</option>
+				</select></td>			
+				<td><input type="button" name="nappi" value="Tallenna" id="tallenna" onclick="vieTiedot()"></td>
+			</tr>
+		<tbody>
+		</tbody>
+	</table>
+	<input type="hidden" name="kirja_id" id="kirja_id">
+</form>
+<span id="ilmo"></span>
+<script>
+
+function tutkiKey(event){
+	if(event.keyCode==13){//Enter
+		vieTiedot();
+	}		
+}
+
+document.getElementById("kirja_nimi").focus();//viedään kursori etunimi-kenttään sivun latauksen yhteydessä
+
+//Haetaan muutettavan asiakkaan tiedot. Kutsutaan backin GET-metodia ja välitetään kutsun mukana muutettavan tiedon id
+//GET /asiakkaat/haeyksi/id
+var kirja_id = requestURLParam("kirja_id"); //Funktio löytyy scripts/main.js 
+console.log("id:n asiakas_id data arvo: " + kirja_id);
+fetch("Kirjat/haeyksi/" + kirja_id,{
+      method: 'GET'	      
+    })
+.then( function (response) {
+	return response.json()
+})
+.then( function (responseJson) {	
+	document.getElementById("kirja_id").value = responseJson.kirja_id;		
+	document.getElementById("kirja_nimi").value = responseJson.kirja_nimi;
+	document.getElementById("kirjailija_etunimi").value = responseJson.kirjailija_etunimi;	
+	document.getElementById("kirjailija_sukunimi").value = responseJson.kirjailija_sukunimi;	
+	document.getElementById("genre").value = responseJson.genre;	
+	document.getElementById("sidosasu").value = responseJson.sidosasu;	
+});	
+
+//Funktio tietojen muuttamista varten. Kutsutaan backin PUT-metodia ja välitetään kutsun mukana muutetut tiedot json-stringinä.
+//PUT /asiakkaat/
+function vieTiedot(){
+	var kirja_nimi = document.getElementById("kirja_nimi").value;
+	var kirjailija_etunimi = document.getElementById("kirjailija_etunimi").value;
+	var kirjailija_sukunimi = document.getElementById("kirjailija_sukunimi").value;
+	var genre = document.getElementById("genre").value;
+	var sidosasu = document.getElementById("sidosasu").value;	
+	if(kirja_nimi.length<2||kirjailija_etunimi.length<2||kirjailija_sukunimi.length<2||genre.length<2||sidosasu.length<2){
+		document.getElementById("ilmo").innerHTML = "Antamasi arvot eivät kelpaa!"
+		return;
+	}
+	var formJsonStr=formDataToJSON(document.getElementById("tiedot")); //muutetaan lomakkeen tiedot json-stringiksi
+	//Lähetään muutetut tiedot backendiin
+	fetch("Kirjat",{
+	      method: 'PUT',
+	      body:formJsonStr
+	    })
+	.then( function (response) {
+		return response.json();
+	})
+	.then( function (responseJson) {
+		var vastaus = responseJson.response;		
+		if(vastaus==0){
+			document.getElementById("ilmo").innerHTML= "Tietojen päivitys epäonnistui";
+        }else if(vastaus==1){	        	
+        	document.getElementById("ilmo").innerHTML= "Tietojen päivitys onnistui";			      	
+		}	
+	});	
+}
+</script>
+</body>
+</html>
